@@ -8,12 +8,23 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 
 
-# Wrapper
-class MyFig(ABC):
 
-    @abstractmethod
+class MyFig():
+
+    def __init__(self, r: int, c: int):
+        """
+        :param r: count of rows on figure
+        :param c: count of colums on figure
+        """
+
+        self.fig, self.ax = plt.subplots(r, c, gridspec_kw={'height_ratios': [1 for i in range(r)],
+                                                            'width_ratios': [1 for i in range(c)]})
+
+    def get_ax(self, i: int, j: int):
+        return self.ax[i, j]
+
     def show(self):
-        pass
+        plt.show()
 
 
 def open_img(path: str = "") -> np.ndarray:
@@ -22,8 +33,7 @@ def open_img(path: str = "") -> np.ndarray:
     if img is None:
         print("Can't open image:(")
         return None
-    # cv2.imshow("Your image", img)
-    # cv2.waitKey(0)
+
     return img
 
 
@@ -55,6 +65,29 @@ def unite_plot_vp_and_hp(img: np.ndarray, hp: np.ndarray, vp: np.ndarray) -> Non
     plt.grid()
 
     plt.show()
+
+
+def unite_plot_new(fig: MyFig, img: np.darray, hp: np.ndarray, vp: np.ndarray) -> MyFig:
+    ax = fig.get_ax(0, 0)
+    ax.imshow(img)
+
+    ax = fig.get_ax(0, 1)
+    ax.plot(hp, range(hp.size))
+    ax.invert_xaxis()
+    ax.invert_yaxis()
+    ax.legend("H")
+    ax.grid()
+
+    ax = fig.get_ax(1, 0)
+    ax.plot(range(vp.size), vp)
+    ax.legend("Vertical projection")
+    ax.set_xlim((0, vp.size))
+    ax.grid()
+
+    ax = fig.get_ax(1, 1)
+    ax.axis("off")
+
+    return fig
 
 
 def color_to_bw(img: np.ndarray, color_component: int = 0) -> np.ndarray:
@@ -194,15 +227,20 @@ def client(mode: MODE, img_name: str) -> None:
     if img is None:
         return
 
+    if IS_SHOW_ORIGINAL_IMG:
+        cv2.imshow("Your image", img)
+        cv2.waitKey(0)
+
     bw_img = color_to_bw(img, 2)
     gray_img = color_to_gray(img)
 
     cv2.imwrite("bw_img.png", bw_img)
     cv2.imwrite("gray_img.png", gray_img)
 
-    # cv2.imshow("BW_image (blue_component)", bw_img)
-    # cv2.imshow("gray_image", gray_img)
-    # cv2.waitKey(0)
+    if IS_SHOW_PRODUCED_IMG:
+        cv2.imshow("BW_image (blue_component)", bw_img)
+        cv2.imshow("gray_image", gray_img)
+        cv2.waitKey(0)
 
     # Расчитать ряды данных вертикальных и горизонатльных проекций
 
@@ -217,7 +255,11 @@ def client(mode: MODE, img_name: str) -> None:
     local_minimum_list(vp_res_for_gray[:, 0])
 
     # Отрисовка графиков проеций и изображения
-    unite_plot_vp_and_hp(gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
+    fig = MyFig(2, 2)
+
+    unite_plot_new(fig, gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
+
+    fig.show()
 
     # Обчислення характериситик
 
@@ -262,6 +304,13 @@ class Tests:
         img = open_img("cofee.png")
         print(f"Length: {img.shape[0]}; \n Width: {img.shape[1]}")
 
+    @staticmethod
+    def test_ndarray():
+        pass
+
+
+IS_SHOW_ORIGINAL_IMG = False
+IS_SHOW_PRODUCED_IMG = False
 
 if __name__ == "__main__":
     client(MODE.TEST, "cofee.png")
