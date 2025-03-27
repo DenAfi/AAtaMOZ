@@ -1,3 +1,6 @@
+from __future__ import annotations
+from abc import ABC, abstractmethod
+
 import cv2
 import numpy as np
 from enum import Enum
@@ -5,7 +8,15 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 
 
-def open_img(path=""):
+# Wrapper
+class MyFig(ABC):
+
+    @abstractmethod
+    def show(self):
+        pass
+
+
+def open_img(path: str = "") -> np.ndarray:
     path_to_file = path or input("Enter path to image: \t")
     img = cv2.imread(path_to_file, cv2.IMREAD_COLOR)
     if img is None:
@@ -16,7 +27,7 @@ def open_img(path=""):
     return img
 
 
-def plot(dataset, title="", xlabel="", ylabel=""):
+def plot(dataset: np.ndarray, title: str = "", xlabel: str = "", ylabel: str = "") -> None:
     plt.plot(range(dataset.size), dataset)
     plt.title = title
     plt.xlabel = xlabel
@@ -25,8 +36,7 @@ def plot(dataset, title="", xlabel="", ylabel=""):
     plt.show()
 
 
-
-def unite_plot_vp_and_hp(img, hp, vp):
+def unite_plot_vp_and_hp(img: np.ndarray, hp: np.ndarray, vp: np.ndarray) -> None:
     plt.subplot(2, 2, 1)
     plt.imshow(img)
 
@@ -47,7 +57,7 @@ def unite_plot_vp_and_hp(img, hp, vp):
     plt.show()
 
 
-def color_to_bw(img, color_component=0):
+def color_to_bw(img: np.ndarray, color_component: int = 0) -> np.ndarray:
     """
     color_component:
         0 - red
@@ -79,7 +89,7 @@ def color_to_bw(img, color_component=0):
     return img_gray
 
 
-def color_to_gray(img):
+def color_to_gray(img: np.ndarray) -> np.ndarray:
     img_gray = img.copy()
 
     for i in range(img_gray.shape[0]):
@@ -91,7 +101,7 @@ def color_to_gray(img):
     return img_gray
 
 
-def compute_statistics(projection):
+def compute_statistics(projection: np.ndarray) -> dict:
     stats = {
         "Mean": np.mean(projection),
         "Median": np.median(projection),
@@ -105,7 +115,7 @@ def compute_statistics(projection):
     return stats
 
 
-def vertical_proection(img):
+def vertical_proection(img: np.ndarray) -> np.ndarray:
     if img.size == img.shape[0] * img.shape[1]:
         v_pr = np.zeros(img.shape[1])
         for i in range(img.shape[1]):
@@ -128,7 +138,7 @@ def vertical_proection(img):
 
 # produce matrix with rows HEIGHT (img.shape[1]) and cols (img.shape[2])
 # if its 3 colored, then colors will be in (b, g, r)
-def horizontal_proection(img):
+def horizontal_proection(img: np.ndarray) -> np.ndarray:
     if img.size == img.shape[0] * img.shape[1]:
         h_pr = np.zeros(img.shape[0])
         for i in range(img.shape[0]):
@@ -151,7 +161,7 @@ def horizontal_proection(img):
 
 # Send ONLY one dimensional array
 # Produce list of nums of minimum, that is less than average value
-def local_minimum_list(img):
+def local_minimum_list(img: np.ndarray) -> list:
     lminimums = list()
     for i in range(1, img.size):
         lminimums.append(img[i] - img[i - 1])
@@ -159,7 +169,7 @@ def local_minimum_list(img):
     average = max(lminimums) - min(lminimums)
     print("average_val: ", average)
 
-    def lminimumsnum(average, lminimums):
+    def lminimumsnum(average: float, lminimums: list) -> list:
         lminimumsnum = list()
         for i in range(len(lminimums)):
             if lminimums[i] <= average:
@@ -175,7 +185,7 @@ class MODE(Enum):
     RUN = 1
 
 
-def client(mode, img_name):
+def client(mode: MODE, img_name: str) -> None:
     if mode == MODE.TEST:
         img = open_img(img_name)
     else:
@@ -226,12 +236,13 @@ def client(mode, img_name):
 
 class Tests:
     @staticmethod
-    def is_eq(m1,m2):
+    def is_eq(m1, m2):
         for i in range(len(m1)):
             if m1[i] != m2[i]:
                 return False
 
         return True
+
     @staticmethod
     def test_hp():
         matrix = np.array([
@@ -243,14 +254,14 @@ class Tests:
         ])
         res = np.array([645, 712, 414, 588, 350])
         t1 = horizontal_proection(matrix)
-        assert Tests.is_eq(t1,res) == True
+        assert Tests.is_eq(t1, res) == True
         print("hp Test passed")
+
     @staticmethod
     def test_img():
         img = open_img("cofee.png")
         print(f"Length: {img.shape[0]}; \n Width: {img.shape[1]}")
 
 
-
 if __name__ == "__main__":
-    client(MODE.TEST, "1.png")
+    client(MODE.TEST, "cofee.png")
