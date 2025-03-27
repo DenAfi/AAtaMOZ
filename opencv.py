@@ -25,7 +25,7 @@ def plot(dataset, title="", xlabel="", ylabel=""):
     plt.show()
 
 
-# TODO
+
 def unite_plot_vp_and_hp(img, hp, vp):
     plt.subplot(2, 2, 1)
     plt.imshow(img)
@@ -175,19 +175,22 @@ class MODE(Enum):
     RUN = 1
 
 
-def client(mode):
+def client(mode, img_name):
     if mode == MODE.TEST:
-        img = open_img("cofee.png")
+        img = open_img(img_name)
     else:
         img = open_img()
 
     if img is None:
         return
 
-    bw_image = color_to_bw(img, 2)
+    bw_img = color_to_bw(img, 2)
     gray_img = color_to_gray(img)
 
-    # cv2.imshow("BW_image (blue_component)", bw_image)
+    cv2.imwrite("bw_img.png", bw_img)
+    cv2.imwrite("gray_img.png", gray_img)
+
+    # cv2.imshow("BW_image (blue_component)", bw_img)
     # cv2.imshow("gray_image", gray_img)
     # cv2.waitKey(0)
 
@@ -203,9 +206,7 @@ def client(mode):
     local_minimum_list(hp_res_for_gray[:, 0])
     local_minimum_list(vp_res_for_gray[:, 0])
 
-    # TODO Unite figure with image in gray color, vp and hp
-    # Almost DONE, but needs to rotate right diagram and make it more convenient
-    # to the image
+    # Отрисовка графиков проеций и изображения
     unite_plot_vp_and_hp(gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
 
     # Обчислення характериситик
@@ -222,30 +223,34 @@ def client(mode):
     for i in statistic_for_vp:
         print(f"{i}: {statistic_for_vp.get(i)}")
 
-def is_eq(m1,m2):
-    for i in range(len(m1)):
-        if m1[i] != m2[i]:
-            return False
 
-    return True
+class Tests:
+    @staticmethod
+    def is_eq(m1,m2):
+        for i in range(len(m1)):
+            if m1[i] != m2[i]:
+                return False
 
-def test_hp():
-    matrix = np.array([
-        [159, 223, 248, 15],
-        [224, 118, 178, 192],
-        [246, 8, 94, 66],
-        [166, 66, 147, 209],
-        [40, 94, 79, 137]
-    ])
-    res = np.array([645, 712, 414, 588, 350])
-    t1 = horizontal_proection(matrix)
-    assert is_eq(t1,res) == True
-    print("hp Test passed")
-def test_img():
-    img = open_img("cofee.png")
-    print(f"Length: {img.shape[0]}; \n Width: {img.shape[1]}")
+        return True
+    @staticmethod
+    def test_hp():
+        matrix = np.array([
+            [159, 223, 248, 15],
+            [224, 118, 178, 192],
+            [246, 8, 94, 66],
+            [166, 66, 147, 209],
+            [40, 94, 79, 137]
+        ])
+        res = np.array([645, 712, 414, 588, 350])
+        t1 = horizontal_proection(matrix)
+        assert Tests.is_eq(t1,res) == True
+        print("hp Test passed")
+    @staticmethod
+    def test_img():
+        img = open_img("cofee.png")
+        print(f"Length: {img.shape[0]}; \n Width: {img.shape[1]}")
 
 
 
 if __name__ == "__main__":
-    client(MODE.TEST)
+    client(MODE.TEST, "1.png")
