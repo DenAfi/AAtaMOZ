@@ -2,13 +2,7 @@ import cv2
 import numpy as np
 from enum import Enum
 import matplotlib.pyplot as plt
-
-
-def check_expect(real, test):
-    if real.all() == test.all():
-        print("Test passed")
-    else:
-        print(f"Error!!! {real} != {test}")
+from scipy.stats import skew, kurtosis
 
 
 def open_img(path=""):
@@ -17,7 +11,7 @@ def open_img(path=""):
     if img is None:
         print("Can't open image:(")
         return None
-    cv2.imshow("Your image", img)
+    # cv2.imshow("Your image", img)
     # cv2.waitKey(0)
     return img
 
@@ -28,6 +22,28 @@ def plot(dataset, title="", xlabel="", ylabel=""):
     plt.xlabel = xlabel
     plt.ylabel = ylabel
     plt.grid()
+    plt.show()
+
+
+# TODO
+def unite_plot_vp_and_hp(img, hp, vp):
+    plt.subplot(2, 2, 1)
+    plt.imshow(img)
+
+    plt.subplot(2, 2, 2)
+    plt.plot(hp, range(hp.size))
+    plt.gca().invert_xaxis()
+    plt.gca().invert_yaxis()
+    # plt.plot(range(hp.size), hp)
+    plt.legend("Horizontal projection")
+    plt.grid()
+
+    plt.subplot(2, 2, 3)
+    plt.plot(range(vp.size), vp)
+    plt.legend("Vertical projection")
+    plt.xlim((0, vp.size))
+    plt.grid()
+
     plt.show()
 
 
@@ -75,6 +91,20 @@ def color_to_gray(img):
     return img_gray
 
 
+def compute_statistics(projection):
+    stats = {
+        "Mean": np.mean(projection),
+        "Median": np.median(projection),
+        "Variance": np.var(projection),
+        "Std Dev": np.std(projection),
+        "Min": np.min(projection),
+        "Max": np.max(projection),
+        "Skewness": skew(projection),
+        "Kurtosis": kurtosis(projection)
+    }
+    return stats
+
+
 def vertical_proection(img):
     if img.size == img.shape[0] * img.shape[1]:
         v_pr = np.zeros(img.shape[1])
@@ -87,9 +117,6 @@ def vertical_proection(img):
         arr1 = vertical_proection(img[:, :, 0])
         arr2 = vertical_proection(img[:, :, 1])
         arr3 = vertical_proection(img[:, :, 2])
-        print(f"arr1 sizes: {arr1.size}")
-        print(f"arr1 sizes: {arr2.size}")
-        print(f"arr1 sizes: {arr3.size}")
         v_pr = np.zeros((arr1.size, 3))
         for i in range(arr1.size):
             v_pr[i, 0] = arr1[i]
@@ -113,9 +140,6 @@ def horizontal_proection(img):
         arr1 = horizontal_proection(img[:, :, 0])
         arr2 = horizontal_proection(img[:, :, 1])
         arr3 = horizontal_proection(img[:, :, 2])
-        print(f"arr1 sizes: {arr1.size}")
-        print(f"arr1 sizes: {arr2.size}")
-        print(f"arr1 sizes: {arr3.size}")
         h_pr = np.zeros((arr1.size, 3))
         for i in range(arr1.size):
             h_pr[i, 0] = arr1[i]
@@ -123,6 +147,27 @@ def horizontal_proection(img):
             h_pr[i, 2] = arr3[i]
 
     return h_pr
+
+
+# Send ONLY one dimensional array
+# Produce list of nums of minimum, that is less than average value
+def local_minimum_list(img):
+    lminimums = list()
+    for i in range(1, img.size):
+        lminimums.append(img[i] - img[i - 1])
+
+    average = max(lminimums) - min(lminimums)
+    print("average_val: ", average)
+
+    def lminimumsnum(average, lminimums):
+        lminimumsnum = list()
+        for i in range(len(lminimums)):
+            if lminimums[i] <= average:
+                lminimumsnum.append(i)
+
+        return lminimumsnum
+
+    return lminimumsnum(average, lminimums)
 
 
 class MODE(Enum):
@@ -142,18 +187,40 @@ def client(mode):
     bw_image = color_to_bw(img, 2)
     gray_img = color_to_gray(img)
 
-    cv2.imshow("BW_image (blue_component)", bw_image)
-    cv2.imshow("gray_image", gray_img)
+    # cv2.imshow("BW_image (blue_component)", bw_image)
+    # cv2.imshow("gray_image", gray_img)
     # cv2.waitKey(0)
 
     # Расчитать ряды данных вертикальных и горизонатльных проекций
 
     hp_res_for_gray = horizontal_proection(gray_img)
-    plot(hp_res_for_gray[:, 0], "HFrequency for gray")
+    # plot(hp_res_for_gray[:, 0], "HFrequency for gray")
 
     vp_res_for_gray = vertical_proection(gray_img)
-    plot(vp_res_for_gray[:, 0], title="VFrequency for gray")
+    # plot(vp_res_for_gray[:, 0], title="VFrequency for gray")
 
+    # Знаходження локальних мінімумов горизонтальної та вертикальної проекцій
+    local_minimum_list(hp_res_for_gray[:, 0])
+    local_minimum_list(vp_res_for_gray[:, 0])
+
+    # TODO Unite figure with image in gray color, vp and hp
+    # Almost DONE, but needs to rotate right diagram and make it more convenient
+    # to the image
+    unite_plot_vp_and_hp(gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
+
+    # Обчислення характериситик
+
+    statistic_for_hp = compute_statistics(hp_res_for_gray[:, 0])
+    statistic_for_vp = compute_statistics(vp_res_for_gray[:, 0])
+
+    print("Infromation about statistic for horizontal proection:")
+    for i in statistic_for_hp:
+        print(f"{i}: {statistic_for_hp.get(i)}")
+
+    print()
+    print("Infromation about statistic for vertical proection:")
+    for i in statistic_for_vp:
+        print(f"{i}: {statistic_for_vp.get(i)}")
 
 
 if __name__ == "__main__":
