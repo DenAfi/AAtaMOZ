@@ -222,6 +222,30 @@ def client(mode):
     for i in statistic_for_vp:
         print(f"{i}: {statistic_for_vp.get(i)}")
 
+def is_eq(m1,m2):
+    for i in range(len(m1)):
+        if m1[i] != m2[i]:
+            return False
+
+    return True
+
+def test_hp():
+    matrix = np.array([
+        [159, 223, 248, 15],
+        [224, 118, 178, 192],
+        [246, 8, 94, 66],
+        [166, 66, 147, 209],
+        [40, 94, 79, 137]
+    ])
+    res = np.array([645, 712, 414, 588, 350])
+    t1 = horizontal_proection(matrix)
+    assert is_eq(t1,res) == True
+    print("hp Test passed")
+def test_img():
+    img = open_img("cofee.png")
+    print(f"Length: {img.shape[0]}; \n Width: {img.shape[1]}")
+
+
 
 if __name__ == "__main__":
     client(MODE.TEST)
