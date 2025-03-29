@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis
 
 
-
 class MyFig():
 
     def __init__(self, r: int, c: int):
@@ -86,6 +85,28 @@ def unite_plot_new(fig: MyFig, img: np.darray, hp: np.ndarray, vp: np.ndarray) -
 
     ax = fig.get_ax(1, 1)
     ax.axis("off")
+
+    return fig
+
+
+def add_minimums_to_ax(fig: MyFig, array: np.ndarray, i: int, j: int, is_inverted: bool = False) -> MyFig:
+    """
+    :param fig: figure on which data is shown
+    :param array: array of data to show
+    :param i: row num of subplot
+    :param j: column num of subplot
+    :param is_inverted: True - if inverted, otherwise False
+    :return: MyFig
+    """
+
+    ax = fig.get_ax(i, j)
+    nums = local_minimum_numlist(array)
+    list_of_values = [array[i] for i in nums]
+
+    if is_inverted:
+        ax.plot(list_of_values, nums, linestyle='', marker='.')
+    else:
+        ax.plot(nums, list_of_values, linestyle='', marker='.')
 
     return fig
 
@@ -213,6 +234,19 @@ def local_minimum_list(img: np.ndarray) -> list:
     return lminimumsnum(average, lminimums)
 
 
+def local_minimum_numlist(array: np.ndarray) -> list:
+    """
+    :param array: one dimensional array of any projection
+    :return: list with element nums of minimums
+    """
+    res = list()
+    for i in range(1, array.shape[0] - 1):
+        if array[i] < array[i - 1] and array[i] < array[i + 1]:
+            res.append(i)
+
+    return res
+
+
 class MODE(Enum):
     TEST = 0
     RUN = 1
@@ -245,19 +279,36 @@ def client(mode: MODE, img_name: str) -> None:
     # Расчитать ряды данных вертикальных и горизонатльных проекций
 
     hp_res_for_gray = horizontal_proection(gray_img)
-    # plot(hp_res_for_gray[:, 0], "HFrequency for gray")
 
     vp_res_for_gray = vertical_proection(gray_img)
-    # plot(vp_res_for_gray[:, 0], title="VFrequency for gray")
+
+    if IS_SHOW_DISTINCT_GRAPHIST_FOR_PROJECTIONS:
+        plt.plot(hp_res_for_gray[:, 0], linestyle='--', marker='.')
+        plt.title("HP")
+        nums = local_minimum_numlist(hp_res_for_gray[:, 0])
+        vals = [hp_res_for_gray[i, 0] for i in nums]
+        plt.plot(nums, vals, linestyle='', marker='.')
+        plt.show()
+
+        plt.plot(vp_res_for_gray[:, 0], linestyle='--', marker='.')
+        nums = local_minimum_numlist(vp_res_for_gray[:, 0])
+        vals = [vp_res_for_gray[i, 0] for i in nums]
+        plt.plot(nums, vals, linestyle='', marker='.')
+        plt.title("VP")
+        plt.show()
 
     # Знаходження локальних мінімумов горизонтальної та вертикальної проекцій
-    local_minimum_list(hp_res_for_gray[:, 0])
-    local_minimum_list(vp_res_for_gray[:, 0])
+
+    # use local_minimum_numlist
 
     # Отрисовка графиков проеций и изображения
     fig = MyFig(2, 2)
 
     unite_plot_new(fig, gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
+    add_minimums_to_ax(fig, hp_res_for_gray[:, 0], 0, 1, True)
+    add_minimums_to_ax(fig, vp_res_for_gray[:, 0], 1, 0)
+
+
 
     fig.show()
 
@@ -308,9 +359,16 @@ class Tests:
     def test_ndarray():
         pass
 
+    @staticmethod
+    def test_localminimum():
+        testdata = np.array([15, 4, 3, 12, 15, 18, 4, 13])
+        resdata = [3, 4]
+        assert resdata == [testdata[i] for i in local_minimum_numlist(testdata)]
+
 
 IS_SHOW_ORIGINAL_IMG = False
 IS_SHOW_PRODUCED_IMG = False
+IS_SHOW_DISTINCT_GRAPHIST_FOR_PROJECTIONS = False
 
 if __name__ == "__main__":
     client(MODE.TEST, "cofee.png")
