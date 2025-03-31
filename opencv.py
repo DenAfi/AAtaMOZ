@@ -282,7 +282,7 @@ def client(mode: MODE, img_name: str) -> None:
 
     vp_res_for_gray = vertical_proection(gray_img)
 
-    if IS_SHOW_DISTINCT_GRAPHIST_FOR_PROJECTIONS:
+    if IS_SHOW_DISTINCT_GRAPHICS_FOR_PROJECTIONS:
         plt.plot(hp_res_for_gray[:, 0], linestyle='--', marker='.')
         plt.title("HP")
         nums = local_minimum_numlist(hp_res_for_gray[:, 0])
@@ -307,8 +307,6 @@ def client(mode: MODE, img_name: str) -> None:
     unite_plot_new(fig, gray_img, hp_res_for_gray[:, 0], vp_res_for_gray[:, 0])
     add_minimums_to_ax(fig, hp_res_for_gray[:, 0], 0, 1, True)
     add_minimums_to_ax(fig, vp_res_for_gray[:, 0], 1, 0)
-
-
 
     fig.show()
 
@@ -368,7 +366,7 @@ class Tests:
 
 IS_SHOW_ORIGINAL_IMG = False
 IS_SHOW_PRODUCED_IMG = False
-IS_SHOW_DISTINCT_GRAPHIST_FOR_PROJECTIONS = False
+IS_SHOW_DISTINCT_GRAPHICS_FOR_PROJECTIONS = False
 
 if __name__ == "__main__":
     client(MODE.TEST, "cofee.png")
